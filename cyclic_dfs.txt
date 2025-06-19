@@ -1,0 +1,68 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+vector<vector<int>> adj = {
+    {0, 1, 1},
+    {1, 0, 1},
+    {1, 1, 0}
+};
+
+int n = adj.size();
+vector<int> visited(n, 0), recStack(n, 0), parent(n, -1);
+
+bool dfs(int u, int& cycleStart, int& cycleEnd) {
+    visited[u] = 1;
+    recStack[u] = 1;
+
+    for (int v = 0; v < n; v++) {
+        if (adj[u][v]) {
+            if (!visited[v]) {
+                parent[v] = u;
+                if (dfs(v, cycleStart, cycleEnd)) return true;
+            } else if (recStack[v]) {
+                cycleStart = v;
+                cycleEnd = u;
+                return true;
+            }
+        }
+    }
+
+    recStack[u] = 0;
+    return false;
+}
+
+void detectCycleDFS() {
+    int start = -1, end = -1;
+
+    for (int i = 0; i < n; i++) {
+        if (!visited[i] && dfs(i, start, end)) break;
+    }
+
+    if (start == -1) {
+        cout << "(DFS) No cycle found" << endl;
+    } else {
+        vector<int> path;
+        path.push_back(start);
+        for (int v = end; v != start; v = parent[v])
+            path.push_back(v);
+        path.push_back(start);
+        reverse(path.begin(), path.end());
+
+        cout << "(DFS) Cycle found: ";
+        for (int node : path) cout << node << " ";
+        cout << endl;
+    }
+}
+
+int main() {
+    cout << "Adjacency Matrix (3x3):" << endl;
+    for (auto row : adj) {
+        for (int x : row) cout << x << " ";
+        cout << endl;
+    }
+
+    detectCycleDFS();
+    return 0;
+}
