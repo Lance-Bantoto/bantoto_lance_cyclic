@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <queue>
 #include <algorithm>
 using namespace std;
 
@@ -10,50 +11,46 @@ vector<vector<int>> adj = {
 };
 
 int n = adj.size();
-vector<int> visited(n, 0), recStack(n, 0), parent(n, -1);
 
-bool dfs(int u, int& cycleStart, int& cycleEnd) {
-    visited[u] = 1;
-    recStack[u] = 1;
+void detectCycleBFS() {
+    vector<int> visited(n, 0), parent(n, -1);
 
-    for (int v = 0; v < n; v++) {
-        if (adj[u][v]) {
-            if (!visited[v]) {
-                parent[v] = u;
-                if (dfs(v, cycleStart, cycleEnd)) return true;
-            } else if (recStack[v]) {
-                cycleStart = v;
-                cycleEnd = u;
-                return true;
+    for (int start = 0; start < n; start++) {
+        if (!visited[start]) {
+            queue<int> q;
+            visited[start] = 1;
+            q.push(start);
+
+            while (!q.empty()) {
+                int u = q.front(); q.pop();
+
+                for (int v = 0; v < n; v++) {
+                    if (adj[u][v]) {
+                        if (!visited[v]) {
+                            visited[v] = 1;
+                            parent[v] = u;
+                            q.push(v);
+                        } else if (v != parent[u]) {
+                            // Found a cycle
+                            vector<int> path;
+                            path.push_back(v);
+                            for (int cur = u; cur != v && cur != -1; cur = parent[cur])
+                                path.push_back(cur);
+                            path.push_back(v);
+                            reverse(path.begin(), path.end());
+
+                            cout << "(BFS) Cycle found: ";
+                            for (int node : path) cout << node << " ";
+                            cout << endl;
+                            return;
+                        }
+                    }
+                }
             }
         }
     }
 
-    recStack[u] = 0;
-    return false;
-}
-
-void detectCycleDFS() {
-    int start = -1, end = -1;
-
-    for (int i = 0; i < n; i++) {
-        if (!visited[i] && dfs(i, start, end)) break;
-    }
-
-    if (start == -1) {
-        cout << "(DFS) No cycle found" << endl;
-    } else {
-        vector<int> path;
-        path.push_back(start);
-        for (int v = end; v != start; v = parent[v])
-            path.push_back(v);
-        path.push_back(start);
-        reverse(path.begin(), path.end());
-
-        cout << "(DFS) Cycle found: ";
-        for (int node : path) cout << node << " ";
-        cout << endl;
-    }
+    cout << "(BFS) No cycle found" << endl;
 }
 
 int main() {
@@ -63,6 +60,6 @@ int main() {
         cout << endl;
     }
 
-    detectCycleDFS();
+    detectCycleBFS();
     return 0;
 }
